@@ -1,14 +1,16 @@
 /*
 
-修改内存泄露问题，在删去channel对象时释放文件描述符fd
+完善Channel实现，配合线程
 
 */
 
 #include "Channel.h"
 #include "EventLoop.h"
+#include "Socket.h"
 #include <unistd.h>
+#include <sys/epoll.h>
 
-Channel::Channel(EventLoop *loop, int fd) : m_loop(loop), m_fd(fd), m_events(0), m_revents(0), m_inEpoll(false){
+Channel::Channel(EventLoop *loop, int fd) : m_loop(loop), m_fd(fd), m_events(0), m_ready(0), m_inEpoll(false),m_useThreadPool(false){
 
 }
 
@@ -20,11 +22,28 @@ Channel::~Channel(){
 }
 
 void Channel::handleEvent(){
-    callback();
+    if(m_ready & (EPOLLIN | EPOLLPRI)){
+        if(m_useThreadPool)       
+            m_loop->addThread(readCallback);
+        else
+            readCallback();
+    }
+    if(m_ready & (EPOLLOUT)){
+        if(m_useThreadPool)       
+            m_loop->addThread(writeCallback);
+        else
+            writeCallback();
+    }
 }
 
-void Channel::enableReading(){
-    m_events = EPOLLIN | EPOLLET;
+//修复为保留原始标志
+void Channel::enableRead(){
+    m_events |= EPOLLIN | EPOLLET;
+    m_loop->updateChannel(this);
+}
+
+void Channel::useET(){
+    m_events |= EPOLLET;
     m_loop->updateChannel(this);
 }
 
@@ -35,26 +54,26 @@ int Channel::getFd(){
 uint32_t Channel::getEvents(){
     return m_events;
 }
-uint32_t Channel::getRevents(){
-    return m_revents;
+uint32_t Channel::getReady(){
+    return m_ready;
 }
 
 bool Channel::getInEpoll(){
     return m_inEpoll;
 }
 
-void Channel::setInEpoll(){
-    m_inEpoll = true;
+void Channel::setInEpoll(bool in){
+    m_inEpoll = in;
 }
 
-// void Channel::setEvents(uint32_t _ev){
-//     events = _ev;
-// }
+void Channel::setUseThreadPool(bool use){
+    m_useThreadPool = use;
+}   
 
-void Channel::setRevents(uint32_t ev){
-    m_revents = ev;
+void Channel::setReady(uint32_t ev){
+    m_ready = ev;
 }
 
-void Channel::setCallback(std::function<void()> cb_f){
-    callback = cb_f;
+void Channel::setReadCallback(std::function<void()> cb_f){
+    readCallback = cb_f;
 }

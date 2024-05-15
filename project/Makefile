@@ -1,15 +1,20 @@
 BUILD_DIR=./build
-SRC=src
-.PHONY:server client clean all
+SRC=$(wildcard src/*.cpp)
+G++FLAGS= -pthread
+BUILD= -o $(BUILD_DIR)/server
+
+.PHONY:server client clean all test
 server:
-	g++ $(SRC)/util.cpp server.cpp $(SRC)/Epoll.cpp $(SRC)/InetAddress.cpp $(SRC)/Socket.cpp $(SRC)/Connection.cpp \
-	$(SRC)/Channel.cpp $(SRC)/EventLoop.cpp $(SRC)/Server.cpp $(SRC)/Acceptor.cpp \
-	$(SRC)/Buffer.cpp -o $(BUILD_DIR)/server 
+	g++ $(G++FLAGS) $(SRC) server.cpp $(BUILD) 
 
 client:
-	g++ $(SRC)/util.cpp $(SRC)/Buffer.cpp $(SRC)/Socket.cpp $(SRC)/InetAddress.cpp client.cpp -o $(BUILD_DIR)/client 
+	g++ src/util.cpp src/Buffer.cpp src/Socket.cpp src/InetAddress.cpp client.cpp -o $(BUILD_DIR)/client 
 
 clean:
-	rm $(BUILD_DIR)/server && rm $(BUILD_DIR)/client
+	rm $(BUILD_DIR)/server && rm $(BUILD_DIR)/client && rm $(BUILD_DIR)/test
+
+test:
+	g++ src/util.cpp src/Buffer.cpp src/Socket.cpp src/InetAddress.cpp src/ThreadPool.cpp \
+	$(G++FLAGS) test.cpp -o $(BUILD_DIR)/test
 
 all: server client
