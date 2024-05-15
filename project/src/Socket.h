@@ -1,14 +1,27 @@
 /*
 
-Socket类：
-主要负责socket的建立
-添加发起连接函数
-
+合并Socket类和InetAddress类：
+两类公用Socket
 */
 
 #pragma once
+#include <arpa/inet.h>
 
-class InetAddress;
+class InetAddress
+{
+private:
+    struct sockaddr_in addr;
+public:
+    InetAddress();
+    InetAddress(const char* ip, uint16_t port);
+    ~InetAddress();
+
+    void setInetAddr(sockaddr_in _addr);
+    sockaddr_in getAddr();
+    char* getIp();
+    uint16_t getPort();
+};
+
 class Socket{
 public:
     Socket();                   //构造函数

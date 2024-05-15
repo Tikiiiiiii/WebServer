@@ -19,7 +19,6 @@ private:
     int m_fd;
     uint32_t m_events;
     uint32_t m_ready;
-    bool m_useThreadPool;
     bool m_inEpoll;
     //下面的对象用于bind一个回调函数，当执行到对应的函数时，会跳回某个对应类执行相应的函数
     std::function<void()> readCallback;
@@ -40,5 +39,4 @@ public:
 
     void setReady(uint32_t);
     void setReadCallback(std::function<void()>);
-    void setUseThreadPool(bool use = true);
 };
