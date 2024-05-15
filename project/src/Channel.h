@@ -10,6 +10,7 @@ Channel类：
 #include <sys/epoll.h>
 #include <functional>
 
+class Socket;
 class EventLoop;
 class Channel
 {
@@ -17,25 +18,27 @@ private:
     EventLoop * m_loop;
     int m_fd;
     uint32_t m_events;
-    uint32_t m_revents;
+    uint32_t m_ready;
+    bool m_useThreadPool;
     bool m_inEpoll;
     //下面的对象用于bind一个回调函数，当执行到对应的函数时，会跳回某个对应类执行相应的函数
-    std::function<void()> callback;
+    std::function<void()> readCallback;
+    std::function<void()> writeCallback;
 public:
-    Channel(EventLoop*, int);
+    Channel(EventLoop *loop, int fd);
     ~Channel();
 
     void handleEvent();
-    void enableReading();
+    void enableRead();
 
     int getFd();
     uint32_t getEvents();
-    uint32_t getRevents();
+    uint32_t getReady();
     bool getInEpoll();
-    void setInEpoll();
+    void setInEpoll(bool _in = true);
+    void useET();
 
-    // void setEvents(uint32_t);
-    void setRevents(uint32_t);
-    //设置回调函数
-    void setCallback(std::function<void()>);
+    void setReady(uint32_t);
+    void setReadCallback(std::function<void()>);
+    void setUseThreadPool(bool use = true);
 };

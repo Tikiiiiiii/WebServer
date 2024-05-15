@@ -26,14 +26,22 @@ Server::~Server(){
 }
 
 void Server::newConnection(Socket *sock){
-    Connection *conn = new Connection(m_loop, sock);
-    std::function<void(Socket*)> cb = std::bind(&Server::deleteConnection, this, std::placeholders::_1);
-    conn->setDeleteConnectionCallback(cb);
-    m_connections[sock->getFd()] = conn;
+    if(sock->getFd() != -1){
+        Connection *conn = new Connection(m_loop, sock);
+        std::function<void(int)> cb = std::bind(&Server::deleteConnection, this, std::placeholders::_1);
+        conn->setDeleteConnectionCallback(cb);
+        m_connections[sock->getFd()] = conn;
+    }
 }
 
-void Server::deleteConnection(Socket * sock){
-    Connection *conn = m_connections[sock->getFd()];
-    m_connections.erase(sock->getFd());
-    delete conn;
+void Server::deleteConnection(int sockfd){
+    if(sockfd != -1){
+        auto it = m_connections.find(sockfd);
+        if(it != m_connections.end()){
+            Connection *conn = m_connections[sockfd];
+            m_connections.erase(sockfd);
+            // close(sockfd);       //正常
+            delete conn;         //会Segmant fault
+        }
+    }
 }

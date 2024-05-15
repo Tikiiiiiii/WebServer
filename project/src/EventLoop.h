@@ -6,12 +6,15 @@ EventLoop类：
 */
 
 #pragma once
+#include <functional>
 class Epoll;
 class Channel;
+class ThreadPool;
 class EventLoop
 {
 private:
     Epoll *m_ep;
+    ThreadPool *m_threadPool;
     bool m_quit;
 public:
     EventLoop();
@@ -19,4 +22,5 @@ public:
 
     void loop();
     void updateChannel(Channel*);
+    void addThread(std::function<void()>);
 };
