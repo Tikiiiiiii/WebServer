@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 
-Channel::Channel(EventLoop *loop, int fd) : m_loop(loop), m_fd(fd), m_events(0), m_ready(0), m_inEpoll(false),m_useThreadPool(false){
+Channel::Channel(EventLoop *loop, int fd) : m_loop(loop), m_fd(fd), m_events(0), m_ready(0), m_inEpoll(false){
 
 }
 
@@ -23,16 +23,10 @@ Channel::~Channel(){
 
 void Channel::handleEvent(){
     if(m_ready & (EPOLLIN | EPOLLPRI)){
-        if(m_useThreadPool)       
-            m_loop->addThread(readCallback);
-        else
-            readCallback();
+        readCallback();
     }
     if(m_ready & (EPOLLOUT)){
-        if(m_useThreadPool)       
-            m_loop->addThread(writeCallback);
-        else
-            writeCallback();
+        writeCallback();
     }
 }
 
@@ -65,10 +59,6 @@ bool Channel::getInEpoll(){
 void Channel::setInEpoll(bool in){
     m_inEpoll = in;
 }
-
-void Channel::setUseThreadPool(bool use){
-    m_useThreadPool = use;
-}   
 
 void Channel::setReady(uint32_t ev){
     m_ready = ev;

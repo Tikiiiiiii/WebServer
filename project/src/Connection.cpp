@@ -8,13 +8,12 @@
 #include <errno.h>
 #include <stdio.h>
 
-Connection::Connection(EventLoop *loop, Socket *sock) : m_loop(loop), m_sock(sock), m_channel(nullptr),inBuffer(new std::string()), readBuffer(nullptr){
+Connection::Connection(EventLoop *loop, Socket *sock) : m_loop(loop), m_sock(sock), m_channel(nullptr), readBuffer(nullptr){
     m_channel = new Channel(m_loop, m_sock->getFd());
     m_channel->enableRead();
     m_channel->useET();
     std::function<void()> cb = std::bind(&Connection::echo, this, sock->getFd());
     m_channel->setReadCallback(cb);
-    m_channel->setUseThreadPool(true);
     readBuffer = new Buffer();
 }
 
@@ -22,6 +21,10 @@ Connection::~Connection(){
     delete m_channel;
     delete m_sock;
     delete readBuffer;
+}
+
+void Connection::setDeleteConnectionCallback(std::function<void(int)> cb_f){
+    deleteConnectionCallback = cb_f;
 }
 
 void Connection::echo(int sockfd){
@@ -42,21 +45,16 @@ void Connection::echo(int sockfd){
             break;
         } else if(bytes_read == 0){  //EOF，客户端断开连接
             printf("EOF, client fd %d disconnected\n", sockfd);
-            // close(sockfd);   //关闭socket会自动将文件描述符从epoll树上移除
-            // deleteConnectionCallback(m_sock);     //多线程会有bug
-                                                    //有bug
+            deleteConnectionCallback(sockfd);
             break;
         }else {
             printf("Connection reset by peer\n");
-            deleteConnectionCallback(sockfd);          //会有bug，注释后单线程无bug
+            deleteConnectionCallback(sockfd);          
             break;
         }
     }
 }
 
-void Connection::setDeleteConnectionCallback(std::function<void(int)> cb_f){
-    deleteConnectionCallback = cb_f;
-}
 
 
 void Connection::send(int sockfd){

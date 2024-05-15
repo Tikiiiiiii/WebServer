@@ -1,33 +1,44 @@
-/*
-
-对于handleevent的实现移动到某实例中变成了echo，删去细节
-
-*/
-
 
 #include "Server.h"
 #include "Socket.h"
-#include "InetAddress.h"
-#include "Channel.h"
 #include "Acceptor.h"
 #include "Connection.h"
+#include "ThreadPool.h"
+#include "EventLoop.h"
+#include <unistd.h>
 #include <functional>
 
 #define READ_BUFFER 1024
+#define THREADNUM 8
 
-Server::Server(EventLoop *loop) : m_loop(loop),m_acceptor(nullptr){    
-    m_acceptor = new Acceptor(m_loop);
+Server::Server(EventLoop *loop) : mainReactor(loop),m_acceptor(nullptr){    
+    m_acceptor = new Acceptor(mainReactor);
     std::function<void(Socket*)> cb = std::bind(&Server::newConnection, this, std::placeholders::_1);
     m_acceptor->setNewConnectionCallback(cb);
+
+    //int size=std::thread::hardware_concurrency();//几核CPU使用几个线程
+    int size =THREADNUM;
+    threadpool=new ThreadPool(size);
+    for(int i=0;i<size;++i){
+        subReactors.push_back(new EventLoop());
+    }
+
+    for(int i = 0; i < size; ++i){
+        std::function<void()> sub_loop = std::bind(&EventLoop::loop, subReactors[i]);
+        threadpool->add(sub_loop);
+    }
 }
 
 Server::~Server(){
     delete m_acceptor;
+    delete threadpool;
 }
 
 void Server::newConnection(Socket *sock){
     if(sock->getFd() != -1){
-        Connection *conn = new Connection(m_loop, sock);
+        //该分配策略对于少量连接来说会频繁使用前几个线程
+        int random=sock->getFd()%subReactors.size();
+        Connection *conn = new Connection(subReactors[random], sock);
         std::function<void(int)> cb = std::bind(&Server::deleteConnection, this, std::placeholders::_1);
         conn->setDeleteConnectionCallback(cb);
         m_connections[sock->getFd()] = conn;
