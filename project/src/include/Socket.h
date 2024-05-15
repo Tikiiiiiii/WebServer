@@ -1,9 +1,3 @@
-/*
-
-合并Socket类和InetAddress类：
-两类公用Socket
-*/
-
 #pragma once
 #include <arpa/inet.h>
 
@@ -12,35 +6,39 @@
 class InetAddress {
  public:
   InetAddress();
-  InetAddress(const char* ip, uint16_t port);
-  ~InetAddress();
+  InetAddress(const char *ip, uint16_t port);
+  ~InetAddress() = default;
 
   DISALLOW_COPY_AND_MOVE(InetAddress);
 
-  void setInetAddr(sockaddr_in _addr);
-  sockaddr_in getAddr();
-  char* getIp();
-  uint16_t getPort();
+  void SetAddr(sockaddr_in addr);
+  sockaddr_in GetAddr();
+  const char *GetIp();
+  uint16_t GetPort();
 
  private:
-  struct sockaddr_in addr;
+  struct sockaddr_in addr_ {};
 };
 
 class Socket {
+ private:
+  int fd_{-1};
+
  public:
-  Socket();              // 构造函数
-  explicit Socket(int);  // 带参数构造函数
-  ~Socket();             // 析构函数
+  Socket();
+  explicit Socket(int fd);
+  ~Socket();
 
   DISALLOW_COPY_AND_MOVE(Socket);
 
-  void bind(InetAddress*);   // 把socket和ip地址绑定
-  void listen();             // 监听
-  void setnonblocking();     // 把socket设置非阻塞
-  int accept(InetAddress*);  // 接受ip连接
-  void connect(InetAddress*);
-  int getFd();  // 返回当前描述符
+  void Bind(InetAddress *addr);
+  void Listen();
+  int Accept(InetAddress *addr);
 
- private:
-  int m_fd;
+  void Connect(InetAddress *addr);
+  void Connect(const char *ip, uint16_t port);
+
+  void SetNonBlocking();
+  bool IsNonBlocking();
+  int GetFd();
 };
