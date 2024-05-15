@@ -1,24 +1,37 @@
-
+/**
+ * @file EventLoop.cpp
+ * @author 冯岳松 (yuesong-feng@foxmail.com)
+ * @brief
+ * @version 0.1
+ * @date 2022-01-04
+ *
+ * @copyright Copyright (冯岳松) 2022
+ *
+ */
 #include "EventLoop.h"
 
 #include <vector>
 
 #include "Channel.h"
-#include "Epoll.h"
+#include "Poller.h"
 
-EventLoop::EventLoop() : m_ep(nullptr), m_quit(false) { m_ep = new Epoll(); }
+EventLoop::EventLoop() { poller_ = new Poller(); }
 
-EventLoop::~EventLoop() { delete m_ep; }
+EventLoop::~EventLoop() {
+  Quit();
+  delete poller_;
+}
 
-void EventLoop::loop() {
-  while (!m_quit) {
+void EventLoop::Loop() {
+  while (!quit_) {
     std::vector<Channel *> chs;
-    chs = m_ep->poll();
-    for (auto it = chs.begin(); it != chs.end(); ++it) {
-      (*it)->handleEvent();
+    chs = poller_->Poll();
+    for (auto &ch : chs) {
+      ch->HandleEvent();
     }
   }
 }
+void EventLoop::Quit() { quit_ = true; }
 
-// 通过回调的方式调用更新
-void EventLoop::updateChannel(Channel *ch) { m_ep->updateChannel(ch); }
+void EventLoop::UpdateChannel(Channel *ch) { poller_->UpdateChannel(ch); }
+void EventLoop::DeleteChannel(Channel *ch) { poller_->DeleteChannel(ch); }

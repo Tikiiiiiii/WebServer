@@ -1,14 +1,4 @@
-/*
-
-Channel类：
-一个Channel对应一个事件，负责管理更多事件的信息，由epoll_data的ptr指向
-把Epoll改为EventLoop，对Epoll即对EventLoop
-
-*/
-
 #pragma once
-#include <stdint.h>
-
 #include <functional>
 
 #include "Macros.h"
@@ -17,31 +7,36 @@ class Socket;
 class EventLoop;
 class Channel {
  public:
-  Channel(EventLoop *loop, int fd);
+  Channel(EventLoop *loop, Socket *socket);
   ~Channel();
 
   DISALLOW_COPY_AND_MOVE(Channel);
 
-  void handleEvent();
-  void enableRead();
+  void HandleEvent();
+  void EnableRead();
+  void EnableWrite();
 
-  int getFd();
-  uint32_t getEvents();
-  uint32_t getReady();
-  bool getInEpoll();
-  void setInEpoll(bool _in = true);
-  void useET();
+  Socket *GetSocket();
+  int GetListenEvents();
+  int GetReadyEvents();
+  bool GetExist();
+  void SetExist(bool in = true);
+  void UseET();
 
-  void setReady(uint32_t);
-  void setReadCallback(std::function<void()>);
+  void SetReadyEvents(int ev);
+  void SetReadCallback(std::function<void()> const &callback);
+  void SetWriteCallback(std::function<void()> const &callback);
+
+  static const int READ_EVENT;   // NOLINT
+  static const int WRITE_EVENT;  // NOLINT
+  static const int ET;           // NOLINT
 
  private:
-  EventLoop *m_loop;
-  int m_fd;
-  uint32_t m_events;
-  uint32_t m_ready;
-  bool m_inEpoll;
-  // 下面的对象用于bind一个回调函数，当执行到对应的函数时，会跳回某个对应类执行相应的函数
-  std::function<void()> readCallback;
-  std::function<void()> writeCallback;
+  EventLoop *loop_;
+  Socket *socket_;
+  int listen_events_{0};
+  int ready_events_{0};
+  bool exist_{false};
+  std::function<void()> read_callback_;
+  std::function<void()> write_callback_;
 };

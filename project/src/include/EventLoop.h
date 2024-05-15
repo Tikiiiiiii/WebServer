@@ -1,15 +1,9 @@
-/*
-
-EventLoop类：
-负责主要的事件循环主体，对Epoll中的每个Channel进行询问
-
-*/
-
 #pragma once
 #include <functional>
 
 #include "Macros.h"
-class Epoll;
+
+class Poller;
 class Channel;
 class EventLoop {
  public:
@@ -18,10 +12,12 @@ class EventLoop {
 
   DISALLOW_COPY_AND_MOVE(EventLoop);
 
-  void loop();
-  void updateChannel(Channel *);
+  void Loop();
+  void UpdateChannel(Channel *ch);
+  void DeleteChannel(Channel *ch);
+  void Quit();
 
  private:
-  Epoll *m_ep;
-  bool m_quit;
+  Poller *poller_{nullptr};
+  bool quit_{false};
 };

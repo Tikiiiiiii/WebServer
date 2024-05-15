@@ -13,12 +13,12 @@ class Acceptor {
 
   DISALLOW_COPY_AND_MOVE(Acceptor);
 
-  void acceptConnection();
-  void setNewConnectionCallback(std::function<void(Socket *)>);
+  void AcceptConnection();
+  void SetNewConnectionCallback(std::function<void(Socket *)> const &callback);
 
  private:
-  EventLoop *m_loop;
-  Socket *m_sock;
-  Channel *m_acceptChannel;
-  std::function<void(Socket *)> newConnectionCallback;
+  EventLoop *loop_;
+  Socket *sock_;
+  Channel *channel_;
+  std::function<void(Socket *)> new_connection_callback_;
 };

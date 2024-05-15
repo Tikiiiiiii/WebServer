@@ -1,37 +1,34 @@
-/*
-
-使用主从Reactor模式：
-在Server中有一个主事件循环来监听并接受连接
-线程池由Server管理
-Server分出多个从Reactor事件循环来处理每个连接
-单个从Reactor占一个线程
-
-*/
-
 #pragma once
+#include <functional>
 #include <map>
 #include <vector>
 
 #include "Macros.h"
 class EventLoop;
 class Socket;
-class ThreadPool;
 class Acceptor;
 class Connection;
+class ThreadPool;
 class Server {
+ private:
+  EventLoop *main_reactor_;
+  Acceptor *acceptor_;
+  std::map<int, Connection *> connections_;
+  std::vector<EventLoop *> sub_reactors_;
+  ThreadPool *thread_pool_;
+  std::function<void(Connection *)> on_connect_callback_;
+  std::function<void(Connection *)> on_message_callback_;
+  std::function<void(Connection *)> new_connect_callback_;
+
  public:
-  explicit Server(EventLoop *);
+  explicit Server(EventLoop *loop);
   ~Server();
 
   DISALLOW_COPY_AND_MOVE(Server);
 
-  void newConnection(Socket *sock);
-  void deleteConnection(int sockfd);
-
- private:
-  EventLoop *mainReactor;
-  std::vector<EventLoop *> subReactors;
-  ThreadPool *threadpool;
-  Acceptor *m_acceptor;
-  std::map<int, Connection *> m_connections;
+  void NewConnection(Socket *sock);
+  void DeleteConnection(Socket *sock);
+  void OnConnect(std::function<void(Connection *)> fn);
+  void OnMessage(std::function<void(Connection *)> fn);
+  void NewConnect(std::function<void(Connection *)> fn);
 };

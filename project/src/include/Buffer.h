@@ -1,10 +1,3 @@
-/*
-
-Buffer类：
-echo时的缓冲区，封装和复用性
-
-*/
-
 #pragma once
 #include <string>
 
@@ -12,18 +5,18 @@ echo时的缓冲区，封装和复用性
 
 class Buffer {
  public:
-  Buffer();
-  ~Buffer();
+  Buffer() = default;
+  ~Buffer() = default;
 
   DISALLOW_COPY_AND_MOVE(Buffer);
 
-  void append(const char* _str, int _size);
-  ssize_t size();
-  const char* c_str();
-  void clear();
-  void getline();
-  void setBuf(const char*);
+  void Append(const char *_str, int _size);
+  ssize_t Size();
+  const char *ToStr();
+  void Clear();
+  void Getline();
+  void SetBuf(const char *buf);
 
  private:
-  std::string buf;
+  std::string buf_;
 };
