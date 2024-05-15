@@ -19,22 +19,22 @@ In file project is the completed project
 
 # Complied
 command：
->cd project/
-mkdir build
-cd build
-cmake ..
-chmod +x ../build_support/run_clang_format.py
-chmod +x ../build_support/cpplint.py 
-chmod +x ../build_support/run_clang_tidy.py 
-make format
-make cpplint 
-make clang_tidy
-make echo_server
-make echo_clients
-make echo_client
-./bin/echo_server
-./bin/echo_client
-./bin/echo_clients -t 100 -m 5 (-w 5)
+>cd project/  
+mkdir build    
+cd build  
+cmake ..  
+chmod +x ../build_support/run_clang_format.  
+chmod +x ../build_support/cpplint.py   
+chmod +x ../build_support/run_clang_tidy.py   
+make format  
+make cpplint   
+make clang_tidy  
+make echo_server  
+make echo_clients  
+make echo_client  
+./bin/echo_server  
+./bin/echo_client   
+./bin/echo_clients -t 100 -m 5 (-w 5)  
 
 
 
